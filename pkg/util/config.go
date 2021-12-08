@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	"github.com/kelseyhightower/envconfig"
 )
 
 // Config stores information to contact with the pf9 controller.
@@ -28,20 +30,25 @@ var Context Config
 func LoadConfig(loc string) (Config, error) {
 
 	f, err := os.Open(loc)
+	ctx := Config{}
 
 	// We will execute it if no config found or if config found but have invalid credentials
 	if err != nil {
+		if err := envconfig.Process("", &ctx); err != nil {
+			return Config{}, err
+		}
+	} else {
 
-		return Config{}, err
-	}
+		defer f.Close()
 
-	defer f.Close()
+		//ctx = Config{WaitPeriod: time.Duration(60), AllowInsecure: false}
+		err = json.NewDecoder(f).Decode(&ctx)
 
-	ctx := Config{WaitPeriod: time.Duration(60), AllowInsecure: false}
-	err = json.NewDecoder(f).Decode(&ctx)
+		if err != nil {
+			fmt.Println("An error has occured", err)
+			return Config{}, err
+		}
 
-	if err != nil {
-		fmt.Println("An error has occured ", err)
 	}
 
 	// decode the password

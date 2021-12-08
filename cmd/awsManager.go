@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -70,6 +72,13 @@ func CheckDeleteCluster() {
 
 	tNow := time.Now().UTC()
 
+	clusterLifeString := os.Getenv("CLUSTERLIFE")
+	clusterLife, err := strconv.Atoi(clusterLifeString)
+
+	if err != nil {
+		clusterLife = 36
+	}
+
 	for i, _ := range clusters {
 
 		betterFormat := clusters[i].CreatedAt
@@ -82,7 +91,7 @@ func CheckDeleteCluster() {
 
 		duration := tNow.Sub(t)
 
-		if duration.Hours() > 36 {
+		if duration.Hours() > float64(clusterLife) {
 
 			fmt.Println("Deleting cluster (Age ", duration, "): ", clusters[i])
 
